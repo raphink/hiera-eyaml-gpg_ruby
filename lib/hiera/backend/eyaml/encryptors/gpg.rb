@@ -96,6 +96,7 @@ class Hiera
             gnupghome = self.option :gnupghome
             debug("GNUPGHOME is #{gnupghome}")
             RubyGpg.config.homedir = gnupghome
+            RubyGpg.config.executable = '/usr/bin/gpg'
 
             recipients = self.find_recipients
             debug("Recipents are #{recipients}")
