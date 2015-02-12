@@ -131,7 +131,7 @@ class Hiera
             #ciphertext = crypto.encrypt(data, :recipients => keys)
             #ciphertext.seek 0
             #ciphertext.read
-            RubyGpg.encrypt_string(plaintext, recipients.join(','))
+            RubyGpg.encrypt_string(plaintext, recipients)
           end
 
           def self.decrypt ciphertext
