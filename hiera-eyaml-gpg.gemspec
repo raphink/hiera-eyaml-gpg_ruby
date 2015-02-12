@@ -19,4 +19,5 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency('hiera-eyaml', '>=1.3.8')
   gem.add_dependency('gpgme', '>=2.0.0')
+  gem.add_dependency('ruby_gpg')
 end

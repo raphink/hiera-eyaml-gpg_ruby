@@ -1,4 +1,4 @@
-require 'gpgme'
+require 'ruby_gpg'
 require 'base64'
 require 'pathname'
 require 'hiera/backend/eyaml/encryptor'
@@ -93,76 +93,79 @@ class Hiera
           end
 
           def self.encrypt plaintext
-            gnupghome = self.option :gnupghome
-            GPGME::Engine.home_dir = gnupghome
-            debug("GNUPGHOME is #{gnupghome}")
+            # TODO: gnupghome
+            #gnupghome = self.option :gnupghome
+            #GPGME::Engine.home_dir = gnupghome
+            #debug("GNUPGHOME is #{gnupghome}")
 
-            ctx = GPGME::Ctx.new
+            #ctx = GPGME::Ctx.new
 
             recipients = self.find_recipients
             debug("Recipents are #{recipients}")
 
             raise RecoverableError, 'No recipients provided, don\'t know who to encrypt to' if recipients.empty?
 
-            keys = recipients.map {|r| 
-              key_to_use = ctx.keys(r).first 
-              if key_to_use.nil? 
-                raise RecoverableError, "No key found on keyring for #{r}"
-              end
-              key_to_use
-            }
-            debug("Keys: #{keys}")
+            #keys = recipients.map {|r| 
+            #  key_to_use = ctx.keys(r).first 
+            #  if key_to_use.nil? 
+            #    raise RecoverableError, "No key found on keyring for #{r}"
+            #  end
+            #  key_to_use
+            #}
+            #debug("Keys: #{keys}")
 
-            always_trust = self.option(:always_trust)
-            unless always_trust
-              # check validity of recipients (this is possibly naive, but better than the unhelpful
-              # error that it would spit out otherwise)
-              keys.each do |key|
-                unless key.primary_uid.validity >= GPGME::VALIDITY_FULL
-                  raise RecoverableError, "Key #{key.sha} (#{key.email}) not trusted (if key trust is established by another means then specify always-trust)"
-                end
-              end
-            end
+            #always_trust = self.option(:always_trust)
+            #unless always_trust
+            #  # check validity of recipients (this is possibly naive, but better than the unhelpful
+            #  # error that it would spit out otherwise)
+            #  keys.each do |key|
+            #    unless key.primary_uid.validity >= GPGME::VALIDITY_FULL
+            #      raise RecoverableError, "Key #{key.sha} (#{key.email}) not trusted (if key trust is established by another means then specify always-trust)"
+            #    end
+            #  end
+            #end
 
-            data = GPGME::Data.from_str(plaintext)
-            crypto = GPGME::Crypto.new(:always_trust => always_trust)
+            #data = GPGME::Data.from_str(plaintext)
+            #crypto = GPGME::Crypto.new(:always_trust => always_trust)
 
-            ciphertext = crypto.encrypt(data, :recipients => keys)
-            ciphertext.seek 0
-            ciphertext.read
+            #ciphertext = crypto.encrypt(data, :recipients => keys)
+            #ciphertext.seek 0
+            #ciphertext.read
+            RubyGpg.encrypt_string(plaintext, recipients.join(','))
           end
 
           def self.decrypt ciphertext
-            gnupghome = self.option :gnupghome
-            GPGME::Engine.home_dir = gnupghome
-            debug("GNUPGHOME is #{gnupghome}")
+            #gnupghome = self.option :gnupghome
+            #GPGME::Engine.home_dir = gnupghome
+            #debug("GNUPGHOME is #{gnupghome}")
 
-            ctx = if hiera?
-              GPGME::Ctx.new
-            else
-              GPGME::Ctx.new(:passphrase_callback => method(:passfunc))
-            end
+            #ctx = if hiera?
+            #  GPGME::Ctx.new
+            #else
+            #  GPGME::Ctx.new(:passphrase_callback => method(:passfunc))
+            #end
 
-            if !ctx.keys.empty?
-              raw = GPGME::Data.new(ciphertext)
-              txt = GPGME::Data.new
+            RubyGpg.decrypt_string(ciphertext)
+            #if !ctx.keys.empty?
+            #  raw = GPGME::Data.new(ciphertext)
+            #  txt = GPGME::Data.new
 
-              begin
-                txt = ctx.decrypt(raw)
-              rescue GPGME::Error::DecryptFailed => e
-                warn("Fatal: Failed to decrypt ciphertext (check settings and that you are a recipient)")
-                raise e
-              rescue Exception => e
-                warn("Warning: General exception decrypting GPG file")
-                raise e
-              end
+            #  begin
+            #    txt = ctx.decrypt(raw)
+            #  rescue GPGME::Error::DecryptFailed => e
+            #    warn("Fatal: Failed to decrypt ciphertext (check settings and that you are a recipient)")
+            #    raise e
+            #  rescue Exception => e
+            #    warn("Warning: General exception decrypting GPG file")
+            #    raise e
+            #  end
 
-              txt.seek 0
-              txt.read
-            else
-              warn("No usable keys found in #{gnupghome}. Check :gpg_gnupghome value in hiera.yaml is correct")
-              raise ArgumentError, "No usable keys found in #{gnupghome}. Check :gpg_gnupghome value in hiera.yaml is correct"
-            end
+            #  txt.seek 0
+            #  txt.read
+            #else
+            #  warn("No usable keys found in #{gnupghome}. Check :gpg_gnupghome value in hiera.yaml is correct")
+            #  raise ArgumentError, "No usable keys found in #{gnupghome}. Check :gpg_gnupghome value in hiera.yaml is correct"
+            #end
           end
 
           def self.create_keys
