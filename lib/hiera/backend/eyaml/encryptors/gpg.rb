@@ -95,8 +95,8 @@ class Hiera
           def self.encrypt plaintext
             gnupghome = self.option :gnupghome
             debug("GNUPGHOME is #{gnupghome}")
-            RubyGpg.config.homedir = gnupghome
-            RubyGpg.config.executable = '/usr/bin/gpg'
+            #RubyGpg.config.homedir = gnupghome
+            #RubyGpg.config.executable = '/usr/bin/gpg'
 
             recipients = self.find_recipients
             debug("Recipents are #{recipients}")
@@ -111,7 +111,7 @@ class Hiera
           def self.decrypt ciphertext
             gnupghome = self.option :gnupghome
             debug("GNUPGHOME is #{gnupghome}")
-            RubyGpg.config.homedir = gnupghome
+            #RubyGpg.config.homedir = gnupghome
 
             RubyGpg.decrypt_string(ciphertext)
           end
